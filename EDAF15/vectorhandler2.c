@@ -1,24 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
-#include "vectorhandler.h"
+#include "vectorhandler2.h"
 
 fix_p* init_vector(int nbr_of_elements)
 {
     fix_p* v;
     v = malloc(nbr_of_elements*sizeof(fix_p));
-    return v;
-}
-
-long* init_vector_long(int nbr_of_elements, long elements)
-{
-    long* v;
-    v = malloc(nbr_of_elements*sizeof(long));
-    // int i;
-    // for (i = 0; i < nbr_of_elements; ++i)
-    // {
-    //     v[i] = elements;
-    // }
-    memset(v, elements, nbr_of_elements*sizeof(long));
     return v;
 }
 

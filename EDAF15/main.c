@@ -49,7 +49,7 @@ static struct fm {
 	unsigned long long	(*func)(char*, char*, int);
 	unsigned long long	count;
 } fm[] = { 
-	ENTRY(TomKva_v5),
+	ENTRY(TomKva_v4),
 };
 
 static unsigned int correct[] = { 1, 0, 1, 0, 0, 0 };

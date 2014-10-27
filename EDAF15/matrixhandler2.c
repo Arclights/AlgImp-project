@@ -1,17 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "matrixhandler.h"
+#include "matrixhandler2.h"
 
-fix_p** init_matrix(int rows, int columns)
+void init_matrix(fix_p** m, int rows, int columns)
 {
-    fix_p** m;
     int i;
-    m = malloc(rows*sizeof(fix_p*));
     int row_length = columns*sizeof(fix_p);
     for (i = 0; i < rows; i += 1)
         m[i] = malloc(row_length);
-    return m;
 }
+
 
 _matrix* parseMatrix(FILE* file)
 {
@@ -28,7 +26,8 @@ _matrix* parseMatrix(FILE* file)
     matrix->rows = rows;
     matrix->columns = columns;
 
-    matrix->cells = init_matrix(rows, columns);
+    matrix->cells = malloc(rows*sizeof(fix_p*));
+    init_matrix(matrix->cells, rows, columns);
 
     int rowCounter = 0;
     int columnCounter = 0;
@@ -103,22 +102,4 @@ void sort_matrix(int rows, int col_to_sort_by, int* n1, int* n2, fix_p** m, fix_
     }
 
     *n2 = curr_row;
-}
-
-fix_p** resize_matrix(fix_p** matrix, int rows, int cols, int new_rows){
-    fix_p** new_matrix = init_matrix(new_rows, cols);
-    // printf("Resize\n");
-    if(new_matrix == NULL){
-        fprintf(stderr,"Out of memory");
-    }
-    fix_p* temp_row;
-    // memcpy
-    int i;
-    for(i = 0; i < rows; i++){
-        temp_row = new_matrix[i];
-        new_matrix[i] = matrix[i];
-        free(temp_row);
-    }
-    free(matrix);
-    return new_matrix;
 }

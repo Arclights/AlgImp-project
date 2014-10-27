@@ -5,10 +5,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <limits.h>
-#include "matrixhandler.h"
+#include "matrixhandler2.h"
 #include "fix_p.h"
-#include "vectorhandler.h"
-#include "arena.h"
+#include "vectorhandler2.h"
+#include "arena3.h"
 
 static unsigned long long   fm_count;
 static volatile bool        proceed = false;
@@ -25,8 +25,9 @@ Global arena
 Score: 33 914 097
 **/
 
-//unsigned long long fm_elim(int rows, int cols, int** A, int* c)
-unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c)
+// unsigned long long fm_elim(int rows, int cols, int** A, int* c)
+// unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c)
+unsigned long long fm_elim(int rows, int cols, fix_p** A, fix_p* c)
 {
 //1
     int r;
@@ -54,9 +55,11 @@ unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c
     r = cols;
     s = rows;
 
-    t = check_out_matrix_copy(arena, A, rows, cols);
-    q = check_out_vector_copy(arena, c, rows);
-    
+    // t = check_out_matrix_copy(arena, A, rows, cols);
+    // q = check_out_vector_copy(arena, c, rows);
+    t = check_out_matrix_copy(A, rows, cols);
+    q = check_out_vector_copy(c, rows);
+
     // printf("\n\nNew system\n");
     // print_system(s, r, t, q);
     // printf("\n");
@@ -66,29 +69,29 @@ unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c
     //2
         sort_matrix(s, r-1, &n1, &n2, t, q);
 
-        printf("s: %d\nn1: %d\nn2: %d\n", s, n1, n2);
-        printf("\n");
-        printf("After sort:\n");
-        print_system(s, r, t, q);
-        printf("\n");
+        // printf("s: %d\nn1: %d\nn2: %d\n", s, n1, n2);
+        // printf("\n");
+        // printf("After sort:\n");
+        // print_system(s, r, t, q);
+        // printf("\n");
 
     // 3
     
     qj = q;
-    for(j = 0; j < n2; j++){
+    for(j = 0; j < n2; ++j){
         tjr = t[j][r-1];
         *qj = fix_p_div(*qj, tjr);
         qj++;
         tj = t[j];
-        for(i = 0; i < r; i++){
+        for(i = 0; i < r; ++i){
             *tj = fix_p_div(*tj, tjr);
             tj++;
         }
     }
 
-    printf("After div:\n");
-    print_system(s, r, t, q);
-    printf("\n");
+    // printf("After div:\n");
+    // print_system(s, r, t, q);
+    // printf("\n");
 
     
 
@@ -102,7 +105,7 @@ unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c
         br = 0;
     // printf("brs:\n");
         if(n2 > n1){
-            for(j = n1; j < n2; j++){
+            for(j = n1; j < n2; ++j){
                 if(q[j] > br){
                     br = q[j];
                 }
@@ -114,7 +117,7 @@ unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c
         Br = LONG_MAX;
     // printf("\nBrs:\n");
         if(n1 > 0){
-            for(j = 0; j < n1; j++){
+            for(j = 0; j < n1; ++j){
                 if(q[j] < Br){
                     Br = q[j];
                 }
@@ -136,13 +139,17 @@ unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c
 
         if(br > Br || qj_lt_0){
             // printf("br > Br || qj_lt_0\n");
-            hand_back_matrix(arena, &t);
-            hand_back_vector(arena, &q);
+            // hand_back_matrix(arena, &t);
+            // hand_back_vector(arena, &q);
+            hand_back_matrix(t);
+            hand_back_vector(q);
             return 0;
         }else{
             // printf("not br > Br || qj_lt_0\n");
-            hand_back_matrix(arena, &t);
-            hand_back_vector(arena, &q);
+            // hand_back_matrix(arena, &t);
+            // hand_back_vector(arena, &q);
+            hand_back_matrix(t);
+            hand_back_vector(q);
             return 1;
         }
     }
@@ -154,23 +161,27 @@ unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c
 
         // print_system(s, r, t, q);
 
-        for(j = 0; j < n1; j++){
+        for(j = 0; j < n1; ++j){
             fix_p sum = 0;
-            for(i = 0; i < r; i++){
+            for(i = 0; i < r; ++i){
                 sum += t[j][i];
             }
             if(sum != q[j]){
                 // printf("i:%d j:%d sum:%f q:%f\n", i,j,fix_p2double(sum),fix_p2double(q[j]));
                 // free_up_t_q(s,t,q);
-                hand_back_matrix(arena, &t);
-                hand_back_vector(arena, &q);
+                // hand_back_matrix(arena, &t);
+                // hand_back_vector(arena, &q);
+                hand_back_matrix(t);
+                hand_back_vector(q);
                 return 0;
             }
             // printf("+ %f\n",fix_p2double(q[j]));
         }
 
-        hand_back_matrix(arena, &t);
-        hand_back_vector(arena, &q);
+        // hand_back_matrix(arena, &t);
+        // hand_back_vector(arena, &q);
+        hand_back_matrix(t);
+        hand_back_vector(q);
         return 1;
     }
 
@@ -181,8 +192,10 @@ unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c
     old_q = q;
     // t = init_matrix(s_p, r - 1);
     // q = init_vector(s_p);
-    t = check_out_matrix(arena, s_p);
-    q = check_out_vector(arena, s_p);
+    // t = check_out_matrix(arena, s_p);
+    // q = check_out_vector(arena, s_p);
+    t = check_out_matrix(s_p, r-1);
+    q = check_out_vector(s_p);
 
         // printf("s_p: %d\n", s_p);
 
@@ -194,12 +207,12 @@ unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c
     fix_p old_qk;
     fix_p* old_tk;
     fix_p* old_tl;
-    for(k = 0; k < n1; k++){
+    for(k = 0; k < n1; ++k){
         old_qk = old_q[k];
         old_tk = old_t[k];
-        for(l = n1; l < n2; l++){
+        for(l = n1; l < n2; ++l){
             old_tl = old_t[l];
-            for(i = 0; i < r-1; i++){
+            for(i = 0; i < r-1; ++i){
                 // printf("%ld\n",t[curr_row][i]);
                 // printf("k:%d i:%d l:%d\n", k ,i, l);
                 t[curr_row][i] = old_tk[i] - old_tl[i];
@@ -209,16 +222,18 @@ unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c
         }
     }
 
-    for(j = n2; j < s; j++){
-        for(i = 0; i < r-1; i++){
+    for(j = n2; j < s; ++j){
+        for(i = 0; i < r-1; ++i){
             t[curr_row][i] = old_t[j][i];
         }
         q[curr_row] = old_q[j];
         curr_row++;
     }
 
-    hand_back_matrix(arena, &old_t);
-    hand_back_vector(arena, &old_q);
+    // hand_back_matrix(arena, &old_t);
+    // hand_back_vector(arena, &old_q);
+    hand_back_matrix(old_t);
+    hand_back_vector(old_q);
 
     r = r - 1;
     s = s_p;
@@ -230,6 +245,17 @@ unsigned long long fm_elim(Arena* arena, int rows, int cols, fix_p** A, fix_p* c
 }
 
 
+}
+
+void printMatrix2(fix_p** matrix, int rows, int columns){
+        int i;
+    int j;
+    for(i = 0; i < rows; i++){
+        for(j = 0; j < columns; j++){
+            printf("%f(%ld)",fix_p2double(matrix[i][j]), matrix[i][j]);
+        }
+        printf("\n");
+    }
 }
 
 void free_up(_matrix* matA, _vector* vecC){
@@ -273,16 +299,17 @@ unsigned long long TomKva_v4(char* aname, char* cname, int seconds)
     fclose(afile);
     fclose(cfile);
 
-    Arena* arena = init_arena_basic(6, 6);
+    // Arena* arena = init_arena_basic(6, 6);
 
     if (seconds == 0)
     {
         /* Just run once for validation. */
 
         // Uncomment when your function and variables exist...
-        int result = fm_elim(arena, matA->rows, matA->columns, matA->cells, vecC->elements);
+        // int result = fm_elim(arena, matA->rows, matA->columns, matA->cells, vecC->elements);
+        int result = fm_elim(matA->rows, matA->columns, matA->cells, vecC->elements);
         free_up(matA,vecC);
-        destroy_arena(arena);
+        // destroy_arena(arena);
         return result;
         //return 1; // return one, i.e. has a solution for now...
     }
@@ -292,18 +319,20 @@ unsigned long long TomKva_v4(char* aname, char* cname, int seconds)
     alarm(seconds);
 
     /* Now loop until the alarm comes... */
-    proceed = false;
+    proceed = true;
     while (proceed)
     {
         // Uncomment when your function and variables exist...
         // fm_elim(rows, cols, a, c);
-        fm_elim(arena, matA->rows, matA->columns, matA->cells, vecC->elements);
+        // fm_elim(arena, matA->rows, matA->columns, matA->cells, vecC->elements);
+        fm_elim(matA->rows, matA->columns, matA->cells, vecC->elements);
         fm_count++;
     }
 
     // Clean up
     free_up(matA,vecC);
-    destroy_arena(arena);
+    clear_arena();
+    // destroy_arena(arena);
 
     return fm_count;
 }

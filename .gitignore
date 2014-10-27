@@ -1,0 +1,7 @@
+*.gcno
+*.gcda
+*.gcov
+*.o
+*.gch
+gprof*
+*.out
